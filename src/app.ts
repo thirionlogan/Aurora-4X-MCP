@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { initDb } from './db';
 import { registerTools } from './tools';
 import { registerResources } from './resources';
+import { registerPrompts } from './prompts';
 
 // Load environment variables
 dotenv.config();
@@ -20,6 +21,7 @@ const server = new McpServer({
 // Register all resources and tools
 registerResources(server);
 registerTools(server);
+registerPrompts(server);
 
 // Connect the server
 const transport = new StdioServerTransport();
