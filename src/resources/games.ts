@@ -8,6 +8,15 @@ export interface Game {
   StartYear: number;
 }
 
+export interface Race {
+  RaceID: number;
+  RaceName: string;
+}
+
+export interface GameWithRaces extends Game {
+  playerRaces: Race[];
+}
+
 export const registerGamesResource = (server: McpServer) => {
   server.resource('games', 'games://list', async (uri) => {
     const db = getDb();
@@ -18,11 +27,25 @@ export const registerGamesResource = (server: McpServer) => {
         )
         .all() as Game[];
 
+      // Get player races for each game
+      const gamesWithRaces = games.map((game) => {
+        const playerRaces = db
+          .prepare(
+            'SELECT RaceID, RaceName FROM FCT_Race WHERE GameID = ? AND NPR = 0'
+          )
+          .all(game.GameID) as Race[];
+
+        return {
+          ...game,
+          playerRaces,
+        };
+      });
+
       return {
         contents: [
           {
             uri: uri.href,
-            text: JSON.stringify(games, null, 2),
+            text: JSON.stringify(gamesWithRaces, null, 2),
             mimeType: 'application/json',
           },
         ],

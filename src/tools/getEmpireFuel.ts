@@ -55,19 +55,22 @@ export const registerGetEmpireFuelTool = (server: McpServer) => {
           };
         }
 
-        // Get detailed colony fuel information
+        // Get detailed colony fuel information using the correct tables
         const colonies = db
           .prepare(
             `SELECT 
               p.PopulationID,
-              p.PopulationName,
+              p.PopName as PopulationName,
               p.FuelStockpile,
-              s.SystemName,
-              b.BodyName
+              rss.Name as SystemName,
+              sb.Name as BodyName
             FROM FCT_Population p
-            JOIN DIM_System s ON p.SystemID = s.SystemID
-            JOIN DIM_Body b ON p.BodyID = b.BodyID
-            WHERE p.RaceID = ? AND p.GameID = ?
+            JOIN FCT_RaceSysSurvey rss ON p.SystemID = rss.SystemID 
+              AND p.GameID = rss.GameID 
+              AND p.RaceID = rss.RaceID
+            LEFT JOIN FCT_SystemBody sb ON p.SystemBodyID = sb.SystemBodyID 
+              AND p.GameID = sb.GameID
+            WHERE p.RaceID = ? AND p.GameID = ? AND p.FuelStockpile > 0
             ORDER BY p.FuelStockpile DESC`
           )
           .all(raceId, gameId) as ColonyFuelDetails[];

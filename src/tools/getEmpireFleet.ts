@@ -11,6 +11,7 @@ interface FleetStats {
 
 interface ShipClassBreakdown {
   ClassName: string;
+  HullType: string;
   ShipCount: number;
   TotalTonnage: number;
 }
@@ -50,14 +51,16 @@ export const registerGetEmpireFleetTool = (server: McpServer) => {
           .prepare(
             `SELECT 
               c.ClassName,
+              h.Description as HullType,
               COUNT(*) as ShipCount,
-              SUM(s.Tonnage) as TotalTonnage
+              SUM(c.Size * 50) as TotalTonnage
             FROM FCT_Ship s
             JOIN FCT_ShipClass c ON s.ShipClassID = c.ShipClassID
+            JOIN FCT_HullDescription h ON c.HullDescriptionID = h.HullDescriptionID
             WHERE s.RaceID = ? 
               AND s.GameID = ? 
               AND s.Destroyed = 0
-            GROUP BY c.ClassName
+            GROUP BY c.ClassName, h.Description
             ORDER BY TotalTonnage DESC`
           )
           .all(raceId, gameId) as ShipClassBreakdown[];

@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getDb } from '../db';
+import { convertAuroraDateTime } from '../utils/dateUtils';
 
 interface WealthStats {
   RaceName: string;
@@ -12,10 +13,16 @@ interface WealthStats {
 }
 
 interface WealthHistory {
-  Date: number;
-  WealthSpent: number;
-  WealthReceived: number;
-  Balance: number;
+  IncrementTime: number;
+  WealthAmount: number;
+  formattedTime?: string;
+  change?: string;
+}
+
+interface WealthUsage {
+  Description: string;
+  Income: number;
+  TotalAmount: number;
 }
 
 export const registerGetEmpireWealthTool = (server: McpServer) => {
@@ -55,29 +62,86 @@ export const registerGetEmpireWealthTool = (server: McpServer) => {
           };
         }
 
+        // Get game start year
+        const gameData = db
+          .prepare('SELECT StartYear FROM FCT_Game WHERE GameID = ?')
+          .get(gameId) as { StartYear: number };
+
+        if (!gameData) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error: No game data found for GameID ${gameId}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
         // Get wealth history
         const wealthHistory = db
           .prepare(
-            `SELECT Date, WealthSpent, WealthReceived, Balance 
+            `SELECT IncrementTime, WealthAmount 
              FROM FCT_WealthHistory 
              WHERE GameID = ? AND RaceID = ? 
-             ORDER BY Date DESC LIMIT 5`
+             ORDER BY IncrementTime DESC`
           )
           .all(gameId, raceId) as WealthHistory[];
+
+        // Format the timestamps
+        const formattedHistory = wealthHistory.map((entry, index) => {
+          const nextEntry = wealthHistory[index + 1];
+          const change = nextEntry
+            ? (entry.WealthAmount - nextEntry.WealthAmount).toLocaleString(
+                undefined,
+                { signDisplay: 'always' }
+              )
+            : '0';
+
+          return {
+            ...entry,
+            formattedTime: convertAuroraDateTime(
+              entry.IncrementTime,
+              gameData.StartYear
+            ).formatted,
+            change,
+          };
+        });
 
         // Get wealth usage breakdown
         const wealthUsage = db
           .prepare(
             `SELECT 
               wu.Description,
-              SUM(wh.WealthSpent) as TotalSpent
-            FROM FCT_WealthHistory wh
-            JOIN DIM_WealthUse wu ON wh.WealthUseID = wu.WealthUseID
-            WHERE wh.GameID = ? AND wh.RaceID = ?
-            GROUP BY wu.WealthUseID, wu.Description
-            ORDER BY TotalSpent DESC`
+              wu.Income,
+              SUM(wd.Amount) as TotalAmount
+            FROM FCT_WealthData wd
+            JOIN DIM_WealthUse wu ON wd.UseID = wu.WealthUseID
+            WHERE wd.GameID = ? AND wd.RaceID = ?
+            GROUP BY wu.WealthUseID, wu.Description, wu.Income, wu.DisplayOrder
+            ORDER BY wu.DisplayOrder, wu.Description`
           )
-          .all(gameId, raceId);
+          .all(gameId, raceId) as WealthUsage[];
+
+        // Separate and format income and expenses
+        const income = wealthUsage
+          .filter((item) => item.Income === 1)
+          .map((item) => ({
+            description: item.Description,
+            amount: item.TotalAmount.toLocaleString(undefined, {
+              maximumFractionDigits: 2,
+            }),
+          }));
+
+        const expenses = wealthUsage
+          .filter((item) => item.Income === 0)
+          .map((item) => ({
+            description: item.Description,
+            amount: item.TotalAmount.toLocaleString(undefined, {
+              maximumFractionDigits: 2,
+            }),
+          }));
 
         // TODO: Get projected wealth changes
         // const projectedChanges = db.prepare(`
@@ -103,8 +167,11 @@ export const registerGetEmpireWealthTool = (server: McpServer) => {
                     creationRate: wealthStats.WealthCreationRate,
                   },
                   history: {
-                    recentTransactions: wealthHistory,
-                    usageBreakdown: wealthUsage,
+                    balanceHistory: formattedHistory,
+                    transactions: {
+                      income,
+                      expenses,
+                    },
                   },
                   // TODO: Add these when implemented
                   // projectedChanges: projectedChanges,

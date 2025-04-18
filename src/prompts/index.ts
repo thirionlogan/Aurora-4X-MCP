@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { registerInitializationPrompt } from './InitializationPrompt';
 
 export const registerPrompts = (server: McpServer) => {
-  // TODO: Register prompts here
+  registerInitializationPrompt(server);
 };

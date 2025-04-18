@@ -16,6 +16,13 @@ interface ColonyDetails {
   BodyName: string;
 }
 
+interface SystemDistribution {
+  SystemName: string;
+  ColonyCount: number;
+  TotalPopulation: number;
+  Colonies: string;
+}
+
 export const registerGetEmpirePopulationTool = (server: McpServer) => {
   server.tool(
     'getEmpirePopulation',
@@ -31,7 +38,7 @@ export const registerGetEmpirePopulationTool = (server: McpServer) => {
           .prepare(
             `SELECT 
               r.RaceName,
-              COUNT(*) as ColonyCount, 
+              COUNT(CASE WHEN p.Population > 0 THEN 1 END) as ColonyCount, 
               SUM(p.Population) as TotalPopulation
             FROM FCT_Population p
             JOIN FCT_Race r ON p.RaceID = r.RaceID AND p.GameID = r.GameID
@@ -56,27 +63,33 @@ export const registerGetEmpirePopulationTool = (server: McpServer) => {
           .prepare(
             `SELECT 
               p.PopulationID,
-              p.PopulationName,
+              p.PopName as PopulationName,
               p.Population,
-              s.SystemName,
-              b.BodyName
+              rss.Name as SystemName,
+              COALESCE(sb.Name, '') as BodyName
             FROM FCT_Population p
-            JOIN DIM_System s ON p.SystemID = s.SystemID
-            JOIN DIM_Body b ON p.BodyID = b.BodyID
-            WHERE p.RaceID = ? AND p.GameID = ?
+            JOIN FCT_RaceSysSurvey rss ON p.SystemID = rss.SystemID AND p.GameID = rss.GameID AND p.RaceID = rss.RaceID
+            LEFT JOIN FCT_SystemBody sb ON p.SystemBodyID = sb.SystemBodyID AND p.GameID = sb.GameID
+            WHERE p.RaceID = ? AND p.GameID = ? AND p.Population > 0
             ORDER BY p.Population DESC`
           )
           .all(raceId, gameId) as ColonyDetails[];
 
-        // TODO: Get population growth rates
-        // const growthRates = db.prepare(`
-        //   SELECT ... from population history
-        // `).all(gameId, raceId);
-
-        // TODO: Get population distribution by system
-        // const systemDistribution = db.prepare(`
-        //   SELECT ... group by system
-        // `).all(gameId, raceId);
+        // Get population distribution by system
+        const systemDistribution = db
+          .prepare(
+            `SELECT 
+              rss.Name as SystemName,
+              COUNT(*) as ColonyCount,
+              SUM(p.Population) as TotalPopulation,
+              GROUP_CONCAT(p.PopName) as Colonies
+            FROM FCT_Population p
+            JOIN FCT_RaceSysSurvey rss ON p.SystemID = rss.SystemID AND p.GameID = rss.GameID AND p.RaceID = rss.RaceID
+            WHERE p.RaceID = ? AND p.GameID = ? AND p.Population > 0
+            GROUP BY rss.SystemID, rss.Name
+            ORDER BY TotalPopulation DESC`
+          )
+          .all(raceId, gameId) as SystemDistribution[];
 
         return {
           content: [
@@ -90,9 +103,10 @@ export const registerGetEmpirePopulationTool = (server: McpServer) => {
                     totalPopulation: popStats.TotalPopulation,
                   },
                   colonies: colonies,
-                  // TODO: Add these when implemented
-                  // growthRates: growthRates,
-                  // systemDistribution: systemDistribution,
+                  systemDistribution: systemDistribution.map((sys) => ({
+                    ...sys,
+                    Colonies: sys.Colonies.split(','),
+                  })),
                 },
                 null,
                 2

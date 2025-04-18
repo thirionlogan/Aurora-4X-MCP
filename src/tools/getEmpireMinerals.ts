@@ -36,6 +36,33 @@ interface MineralDeposit extends Minerals {
   Accessibility: number;
 }
 
+interface MineralStats {
+  total: number;
+  accessibility: number;
+}
+
+interface MineralData {
+  [mineralName: string]: MineralStats;
+}
+
+interface BodyMineralData {
+  bodyName: string;
+  minerals: MineralData;
+}
+
+interface RawMineralDeposit {
+  SystemID: number;
+  SystemName: string;
+  BodyName: string;
+  [key: string]: number | string; // For dynamic mineral fields
+}
+
+interface SystemMineralData {
+  systemName: string;
+  systemTotals: MineralData;
+  bodies: BodyMineralData[];
+}
+
 // TODO: Interface for minerals in transit
 interface MineralsInTransit extends Minerals {
   SourceID: number;
@@ -134,15 +161,177 @@ export const registerGetEmpireMineralsTool = (server: McpServer) => {
         //   WHERE RaceID = ? AND GameID = ?
         // `).get(raceId, gameId) as MineralFlowRates;
 
-        // TODO: Get mineral deposits in controlled systems
-        // Query should look at FCT_MineralDeposit table for deposits in systems
-        // where the empire has a presence or survey data
-        // const mineralDeposits = db.prepare(`
-        //   SELECT ... deposit information ...
-        //   FROM FCT_MineralDeposit md
-        //   JOIN ... system control tables ...
-        //   WHERE RaceID = ? AND GameID = ?
-        // `).all(raceId, gameId) as MineralDeposit[];
+        // Get mineral deposits in controlled systems
+        //FIXME DOESN'T WORK
+        const mineralDeposits = db
+          .prepare(
+            `WITH SystemTotals AS (
+              SELECT 
+                s.SystemID,
+                sbn_sys.Name as SystemName,
+                SUM(CASE WHEN md.MaterialID = 1 THEN md.Amount ELSE 0 END) as Duranium_total,
+                MAX(CASE WHEN md.MaterialID = 1 THEN md.Accessibility ELSE NULL END) as Duranium_accessibility,
+                SUM(CASE WHEN md.MaterialID = 2 THEN md.Amount ELSE 0 END) as Neutronium_total,
+                MAX(CASE WHEN md.MaterialID = 2 THEN md.Accessibility ELSE NULL END) as Neutronium_accessibility,
+                SUM(CASE WHEN md.MaterialID = 3 THEN md.Amount ELSE 0 END) as Corbomite_total,
+                MAX(CASE WHEN md.MaterialID = 3 THEN md.Accessibility ELSE NULL END) as Corbomite_accessibility,
+                SUM(CASE WHEN md.MaterialID = 4 THEN md.Amount ELSE 0 END) as Tritanium_total,
+                MAX(CASE WHEN md.MaterialID = 4 THEN md.Accessibility ELSE NULL END) as Tritanium_accessibility,
+                SUM(CASE WHEN md.MaterialID = 5 THEN md.Amount ELSE 0 END) as Boronide_total,
+                MAX(CASE WHEN md.MaterialID = 5 THEN md.Accessibility ELSE NULL END) as Boronide_accessibility,
+                SUM(CASE WHEN md.MaterialID = 6 THEN md.Amount ELSE 0 END) as Mercassium_total,
+                MAX(CASE WHEN md.MaterialID = 6 THEN md.Accessibility ELSE NULL END) as Mercassium_accessibility,
+                SUM(CASE WHEN md.MaterialID = 7 THEN md.Amount ELSE 0 END) as Vendarite_total,
+                MAX(CASE WHEN md.MaterialID = 7 THEN md.Accessibility ELSE NULL END) as Vendarite_accessibility,
+                SUM(CASE WHEN md.MaterialID = 8 THEN md.Amount ELSE 0 END) as Sorium_total,
+                MAX(CASE WHEN md.MaterialID = 8 THEN md.Accessibility ELSE NULL END) as Sorium_accessibility,
+                SUM(CASE WHEN md.MaterialID = 9 THEN md.Amount ELSE 0 END) as Uridium_total,
+                MAX(CASE WHEN md.MaterialID = 9 THEN md.Accessibility ELSE NULL END) as Uridium_accessibility,
+                SUM(CASE WHEN md.MaterialID = 10 THEN md.Amount ELSE 0 END) as Corundium_total,
+                MAX(CASE WHEN md.MaterialID = 10 THEN md.Accessibility ELSE NULL END) as Corundium_accessibility,
+                SUM(CASE WHEN md.MaterialID = 11 THEN md.Amount ELSE 0 END) as Gallicite_total,
+                MAX(CASE WHEN md.MaterialID = 11 THEN md.Accessibility ELSE NULL END) as Gallicite_accessibility
+              FROM FCT_MineralDeposit md
+              JOIN FCT_SystemBody sb ON md.SystemBodyID = sb.SystemBodyID
+              JOIN FCT_System s ON sb.SystemID = s.SystemID
+              JOIN FCT_SystemBodyName sbn_sys ON s.SystemID = sbn_sys.SystemBodyID
+              JOIN FCT_Population p ON sb.SystemBodyID = p.SystemBodyID
+              WHERE p.GameID = ? 
+              AND p.RaceID = ?
+              AND sbn_sys.RaceID = ?
+              AND sbn_sys.GameID = ?
+              GROUP BY s.SystemID, sbn_sys.Name
+            )
+            SELECT 
+              s.SystemID,
+              st.SystemName,
+              sbn.Name as BodyName,
+              st.Duranium_total as System_Duranium_total,
+              st.Duranium_accessibility as System_Duranium_accessibility,
+              st.Neutronium_total as System_Neutronium_total,
+              st.Neutronium_accessibility as System_Neutronium_accessibility,
+              st.Corbomite_total as System_Corbomite_total,
+              st.Corbomite_accessibility as System_Corbomite_accessibility,
+              st.Tritanium_total as System_Tritanium_total,
+              st.Tritanium_accessibility as System_Tritanium_accessibility,
+              st.Boronide_total as System_Boronide_total,
+              st.Boronide_accessibility as System_Boronide_accessibility,
+              st.Mercassium_total as System_Mercassium_total,
+              st.Mercassium_accessibility as System_Mercassium_accessibility,
+              st.Vendarite_total as System_Vendarite_total,
+              st.Vendarite_accessibility as System_Vendarite_accessibility,
+              st.Sorium_total as System_Sorium_total,
+              st.Sorium_accessibility as System_Sorium_accessibility,
+              st.Uridium_total as System_Uridium_total,
+              st.Uridium_accessibility as System_Uridium_accessibility,
+              st.Corundium_total as System_Corundium_total,
+              st.Corundium_accessibility as System_Corundium_accessibility,
+              st.Gallicite_total as System_Gallicite_total,
+              st.Gallicite_accessibility as System_Gallicite_accessibility,
+              SUM(CASE WHEN md.MaterialID = 1 THEN md.Amount ELSE 0 END) as Duranium_total,
+              MAX(CASE WHEN md.MaterialID = 1 THEN md.Accessibility ELSE NULL END) as Duranium_accessibility,
+              SUM(CASE WHEN md.MaterialID = 2 THEN md.Amount ELSE 0 END) as Neutronium_total,
+              MAX(CASE WHEN md.MaterialID = 2 THEN md.Accessibility ELSE NULL END) as Neutronium_accessibility,
+              SUM(CASE WHEN md.MaterialID = 3 THEN md.Amount ELSE 0 END) as Corbomite_total,
+              MAX(CASE WHEN md.MaterialID = 3 THEN md.Accessibility ELSE NULL END) as Corbomite_accessibility,
+              SUM(CASE WHEN md.MaterialID = 4 THEN md.Amount ELSE 0 END) as Tritanium_total,
+              MAX(CASE WHEN md.MaterialID = 4 THEN md.Accessibility ELSE NULL END) as Tritanium_accessibility,
+              SUM(CASE WHEN md.MaterialID = 5 THEN md.Amount ELSE 0 END) as Boronide_total,
+              MAX(CASE WHEN md.MaterialID = 5 THEN md.Accessibility ELSE NULL END) as Boronide_accessibility,
+              SUM(CASE WHEN md.MaterialID = 6 THEN md.Amount ELSE 0 END) as Mercassium_total,
+              MAX(CASE WHEN md.MaterialID = 6 THEN md.Accessibility ELSE NULL END) as Mercassium_accessibility,
+              SUM(CASE WHEN md.MaterialID = 7 THEN md.Amount ELSE 0 END) as Vendarite_total,
+              MAX(CASE WHEN md.MaterialID = 7 THEN md.Accessibility ELSE NULL END) as Vendarite_accessibility,
+              SUM(CASE WHEN md.MaterialID = 8 THEN md.Amount ELSE 0 END) as Sorium_total,
+              MAX(CASE WHEN md.MaterialID = 8 THEN md.Accessibility ELSE NULL END) as Sorium_accessibility,
+              SUM(CASE WHEN md.MaterialID = 9 THEN md.Amount ELSE 0 END) as Uridium_total,
+              MAX(CASE WHEN md.MaterialID = 9 THEN md.Accessibility ELSE NULL END) as Uridium_accessibility,
+              SUM(CASE WHEN md.MaterialID = 10 THEN md.Amount ELSE 0 END) as Corundium_total,
+              MAX(CASE WHEN md.MaterialID = 10 THEN md.Accessibility ELSE NULL END) as Corundium_accessibility,
+              SUM(CASE WHEN md.MaterialID = 11 THEN md.Amount ELSE 0 END) as Gallicite_total,
+              MAX(CASE WHEN md.MaterialID = 11 THEN md.Accessibility ELSE NULL END) as Gallicite_accessibility
+            FROM FCT_MineralDeposit md
+            JOIN FCT_SystemBody sb ON md.SystemBodyID = sb.SystemBodyID
+            JOIN FCT_System s ON sb.SystemID = s.SystemID
+            JOIN FCT_SystemBodyName sbn ON md.SystemBodyID = sbn.SystemBodyID
+            JOIN FCT_Population p ON sb.SystemBodyID = p.SystemBodyID
+            JOIN SystemTotals st ON s.SystemID = st.SystemID
+            WHERE p.GameID = ? 
+            AND p.RaceID = ?
+            AND sbn.RaceID = ?
+            AND sbn.GameID = ?
+            GROUP BY s.SystemID, st.SystemName, sbn.Name
+            ORDER BY s.SystemID, sbn.Name`
+          )
+          .all(
+            gameId,
+            raceId,
+            raceId,
+            gameId,
+            gameId,
+            raceId,
+            raceId,
+            gameId
+          ) as RawMineralDeposit[];
+
+        // Transform the raw query results into the desired format
+        const systemsMap = new Map<
+          number,
+          SystemMineralData & { systemName: string }
+        >();
+
+        mineralDeposits.forEach((body) => {
+          const systemId = body.SystemID;
+          if (!systemsMap.has(systemId)) {
+            systemsMap.set(systemId, {
+              systemName: body.SystemName,
+              systemTotals: formatMineralData(body, 'System_'),
+              bodies: [],
+            });
+          }
+
+          systemsMap.get(systemId)?.bodies.push({
+            bodyName: body.BodyName,
+            minerals: formatMineralData(body),
+          });
+        });
+
+        function formatMineralData(
+          data: RawMineralDeposit,
+          prefix = ''
+        ): MineralData {
+          const minerals: MineralData = {};
+          const mineralTypes = [
+            'Duranium',
+            'Neutronium',
+            'Corbomite',
+            'Tritanium',
+            'Boronide',
+            'Mercassium',
+            'Vendarite',
+            'Sorium',
+            'Uridium',
+            'Corundium',
+            'Gallicite',
+          ];
+
+          mineralTypes.forEach((mineral) => {
+            const total = data[`${prefix}${mineral}_total`] as number;
+            const accessibility = data[
+              `${prefix}${mineral}_accessibility`
+            ] as number;
+            if (total) {
+              minerals[mineral] = {
+                total,
+                accessibility,
+              };
+            }
+          });
+
+          return minerals;
+        }
+
+        const formattedMineralDeposits = Array.from(systemsMap.values());
 
         // TODO: Get minerals in transit via mass drivers
         // Query should look at mass driver packets in flight
@@ -172,9 +361,9 @@ export const registerGetEmpireMineralsTool = (server: McpServer) => {
                     ...empireMinerals,
                   },
                   colonyBreakdown: colonyMinerals,
+                  mineralDeposits: formattedMineralDeposits,
                   // TODO: Add these fields when queries are implemented
                   // productionRates: mineralFlowRates,
-                  // availableDeposits: mineralDeposits,
                   // inTransit: {
                   //   massDriverPackets: massDriverMinerals,
                   //   cargoShips: cargoShipMinerals

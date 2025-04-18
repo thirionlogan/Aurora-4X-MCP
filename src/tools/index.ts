@@ -6,7 +6,10 @@ import { registerGetEmpireMineralsTool } from './getEmpireMinerals';
 import { registerGetEmpireFleetTool } from './getEmpireFleet';
 import { registerGetEmpireWealthTool } from './getEmpireWealth';
 import { registerGetEmpireFuelTool } from './getEmpireFuel';
-
+import { registerGetSpaceCombatLogTool } from './getSpaceCombatLog';
+import { registerGetGroundCombatLogTool } from './getGroundCombatLog';
+import { registerGetFighterCombatLogTool } from './getFighterCombatLog';
+import { registerGetEmpirePopulationTool } from './getEmpirePopulation';
 export const registerTools = (server: McpServer) => {
   registerQueryTool(server);
   registerGetCurrentDateTool(server);
@@ -15,4 +18,8 @@ export const registerTools = (server: McpServer) => {
   registerGetEmpireFleetTool(server);
   registerGetEmpireWealthTool(server);
   registerGetEmpireFuelTool(server);
+  registerGetEmpirePopulationTool(server);
+  registerGetSpaceCombatLogTool(server);
+  registerGetGroundCombatLogTool(server);
+  registerGetFighterCombatLogTool(server);
 };
