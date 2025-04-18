@@ -1,0 +1,90 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Aurora 4X MCP Project Layout
+
+This document defines the standard project structure and organization for the Aurora 4X MCP implementation.
+
+## Directory Structure
+
+### `/src`
+Main source code directory containing all TypeScript implementation files.
+
+#### `/src/resources`
+MCP resources that provide data access capabilities:
+- `games.ts` - Game listing and management
+- `schema.ts` - Database schema information
+- Add new resources with pattern: `*Resource.ts`
+
+#### `/src/tools`
+MCP tools for performing actions:
+- Each tool should be in its own file
+- Follow naming pattern: `*Tool.ts`
+
+#### `/src/prompts`
+MCP prompt definitions:
+- Contains prompt templates and configurations
+- Follow naming pattern: `*Prompt.ts`
+
+#### `/src/db`
+Database related code:
+- Connection management
+- Query definitions
+- Database utilities
+
+## File Naming Conventions
+
+- Resources: `*Resource.ts`
+- Tools: `*Tool.ts`
+- Prompts: `*Prompt.ts`
+- Tests: `*.test.ts`
+- Database Queries: `*.sql`
+
+## Resource URI Patterns
+
+Resources should follow the URI pattern:
+- `resource://action`
+Example: `games://list`
+
+## Import Organization
+
+1. External MCP SDK imports
+```typescript
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+```
+
+2. Internal relative imports
+```typescript
+import { getDb } from '../db';
+```
+
+## Type Definitions
+
+- Interfaces should be prefixed with 'I' or describe the type directly
+- Keep type definitions close to their usage
+- Export shared types from dedicated type files
+
+## Best Practices
+
+1. Always close database connections in finally blocks
+2. Use prepared statements for SQL queries
+3. Include JSDoc comments for public functions and interfaces
+4. Follow single responsibility principle for resources and tools
+
+## Configuration Files
+
+- `tsconfig.json` - TypeScript configuration
+- `.env` - Environment variables
+- `.eslintrc` - Linting rules
+- `.editorconfig` - Editor formatting
+
+## Adding New Components
+
+When adding new components:
+1. Place in appropriate `/src` subdirectory
+2. Follow established naming conventions
+3. Register in corresponding index.ts file
+4. Include necessary tests
+5. Update documentation
