@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerQueryTool } from './query';
+import { registerSchemaTool } from './schema';
 import { registerGetCurrentDateTool } from './getCurrentDate';
 import { registerGetEmpireResourcesTool } from './getEmpireResources';
 import { registerGetEmpireMineralsTool } from './getEmpireMinerals';
@@ -10,8 +11,10 @@ import { registerGetSpaceCombatLogTool } from './getSpaceCombatLog';
 import { registerGetGroundCombatLogTool } from './getGroundCombatLog';
 import { registerGetFighterCombatLogTool } from './getFighterCombatLog';
 import { registerGetEmpirePopulationTool } from './getEmpirePopulation';
+
 export const registerTools = (server: McpServer) => {
   registerQueryTool(server);
+  registerSchemaTool(server);
   registerGetCurrentDateTool(server);
   registerGetEmpireResourcesTool(server);
   registerGetEmpireMineralsTool(server);
