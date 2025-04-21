@@ -5,6 +5,7 @@ import { getDb } from '../../db';
 export const registerSearchColumnsTool = (server: McpServer) => {
   server.tool(
     'searchColumns',
+    'Search for columns in the database',
     {
       columnName: z.string(),
     },

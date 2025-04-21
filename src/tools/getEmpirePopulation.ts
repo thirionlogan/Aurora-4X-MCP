@@ -26,6 +26,7 @@ interface SystemDistribution {
 export const registerGetEmpirePopulationTool = (server: McpServer) => {
   server.tool(
     'getEmpirePopulation',
+    'Get the current population status for a specific game and race',
     {
       gameId: z.number(),
       raceId: z.number(),

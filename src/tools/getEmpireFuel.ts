@@ -21,6 +21,7 @@ interface ColonyFuelDetails {
 export const registerGetEmpireFuelTool = (server: McpServer) => {
   server.tool(
     'getEmpireFuel',
+    'Get the current fuel status for a specific game and race',
     {
       gameId: z.number(),
       raceId: z.number(),

@@ -75,6 +75,7 @@ interface MineralsInTransit extends Minerals {
 export const registerGetEmpireMineralsTool = (server: McpServer) => {
   server.tool(
     'getEmpireMinerals',
+    'Get the current mineral status for a specific game and race',
     {
       gameId: z.number(),
       raceId: z.number(),

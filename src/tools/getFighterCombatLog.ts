@@ -14,6 +14,7 @@ interface CombatLogEntry {
 export const registerGetFighterCombatLogTool = (server: McpServer) => {
   server.tool(
     'getFighterCombatLog',
+    'Get fighter combat logs for a specific game and race',
     {
       gameId: z.number(),
       raceId: z.number(),

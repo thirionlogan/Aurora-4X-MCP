@@ -19,6 +19,7 @@ interface ShipClassBreakdown {
 export const registerGetEmpireFleetTool = (server: McpServer) => {
   server.tool(
     'getEmpireFleet',
+    'Get the current fleet status for a specific game and race',
     {
       gameId: z.number(),
       raceId: z.number(),

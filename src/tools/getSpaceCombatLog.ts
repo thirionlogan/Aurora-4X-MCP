@@ -14,6 +14,7 @@ interface CombatLogEntry {
 export const registerGetSpaceCombatLogTool = (server: McpServer) => {
   server.tool(
     'getSpaceCombatLog',
+    'Get space combat logs for a specific game and race',
     {
       gameId: z.number(),
       raceId: z.number(),

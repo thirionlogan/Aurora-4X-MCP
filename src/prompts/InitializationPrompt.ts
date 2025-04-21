@@ -53,7 +53,7 @@ export const registerInitializationPrompt = (
 ) => {
   const finalConfig = { ...defaultConfig, ...config };
 
-  server.prompt('initialization', async () => {
+  server.prompt('initialization', 'Initialize the game', async () => {
     const db = getDb();
     try {
       // Get games with player races

@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getDb } from '../../db';
 
 export const registerListTablesTool = (server: McpServer) => {
-  server.tool('listTables', {}, async () => {
+  server.tool('listTables', 'List all tables in the database', {}, async () => {
     const db = getDb();
     try {
       const tables = db

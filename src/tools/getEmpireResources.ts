@@ -23,6 +23,7 @@ interface RaceResourceData {
 export const registerGetEmpireResourcesTool = (server: McpServer) => {
   server.tool(
     'getEmpireResources',
+    'Get the current resource status for a specific game and race',
     {
       gameId: z.number(),
       raceId: z.number(),

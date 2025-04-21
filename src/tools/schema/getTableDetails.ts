@@ -5,6 +5,7 @@ import { getDb } from '../../db';
 export const registerGetTableDetailsTool = (server: McpServer) => {
   server.tool(
     'getTableDetails',
+    'Get details about a table',
     {
       tableName: z.string(),
     },

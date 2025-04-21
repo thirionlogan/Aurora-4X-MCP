@@ -15,6 +15,7 @@ export interface SystemConnection {
 export const registerSystemConnectionsTool = (server: McpServer) => {
   server.tool(
     'getSystemConnections',
+    'Get the system connections for a specific game and race',
     {
       gameId: z.number(),
       raceId: z.number(),

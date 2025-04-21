@@ -28,6 +28,7 @@ interface WealthUsage {
 export const registerGetEmpireWealthTool = (server: McpServer) => {
   server.tool(
     'getEmpireWealth',
+    'Get the current wealth status for a specific game and race',
     {
       gameId: z.number(),
       raceId: z.number(),
