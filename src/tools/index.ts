@@ -11,6 +11,7 @@ import { registerGetSpaceCombatLogTool } from './getSpaceCombatLog';
 import { registerGetGroundCombatLogTool } from './getGroundCombatLog';
 import { registerGetFighterCombatLogTool } from './getFighterCombatLog';
 import { registerGetEmpirePopulationTool } from './getEmpirePopulation';
+import { registerSystemConnectionsTool } from './SystemConnectionsTool';
 
 export const registerTools = (server: McpServer) => {
   registerQueryTool(server);
@@ -25,4 +26,5 @@ export const registerTools = (server: McpServer) => {
   registerGetSpaceCombatLogTool(server);
   registerGetGroundCombatLogTool(server);
   registerGetFighterCombatLogTool(server);
+  registerSystemConnectionsTool(server);
 };
