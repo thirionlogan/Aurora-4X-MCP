@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getDb } from '../db';
 
-interface SystemConnection {
+export interface SystemConnection {
   systemId: number;
   systemName: string;
   connectedTo: Array<{
