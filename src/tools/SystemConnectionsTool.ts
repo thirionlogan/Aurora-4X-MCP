@@ -8,6 +8,7 @@ export interface SystemConnection {
   connectedTo: Array<{
     systemId: number;
     systemName: string;
+    jumpGateRaceId: number;
   }>;
   connectionCount: number;
 }
@@ -49,7 +50,8 @@ export const registerSystemConnectionsTool = (server: McpServer) => {
                         SELECT 
                             s1.SystemID as SourceSystemID,
                             sn1.SystemName as SourceSystemName,
-                            jp1.WPLink as DestinationWarpPointID
+                            jp1.WPLink as DestinationWarpPointID,
+                            jp1.JumpGateRaceID
                         FROM FCT_System s1
                         JOIN FCT_JumpPoint jp1 ON s1.SystemID = jp1.SystemID
                         JOIN SystemNames sn1 ON s1.SystemID = sn1.SystemID
@@ -63,7 +65,8 @@ export const registerSystemConnectionsTool = (server: McpServer) => {
                             cs.SourceSystemID,
                             cs.SourceSystemName,
                             s2.SystemID as DestinationSystemID,
-                            sn2.SystemName as DestinationSystemName
+                            sn2.SystemName as DestinationSystemName,
+                            cs.JumpGateRaceID
                         FROM ConnectedSystems cs
                         JOIN FCT_JumpPoint jp2 ON cs.DestinationWarpPointID = jp2.WarpPointID
                         JOIN FCT_System s2 ON jp2.SystemID = s2.SystemID
@@ -75,7 +78,8 @@ export const registerSystemConnectionsTool = (server: McpServer) => {
                         json_group_array(
                             json_object(
                                 'systemId', DestinationSystemID,
-                                'systemName', DestinationSystemName
+                                'systemName', DestinationSystemName,
+                                'jumpGateRaceId', JumpGateRaceID
                             )
                         ) as connectedTo,
                         COUNT(DISTINCT DestinationSystemID) as connectionCount
