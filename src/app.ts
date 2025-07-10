@@ -22,6 +22,7 @@ try {
   process.exit(1);
 }
 
+// Initialize the data source
 try {
   dataSource.initialize();
   logger.info('Data source initialized successfully');
