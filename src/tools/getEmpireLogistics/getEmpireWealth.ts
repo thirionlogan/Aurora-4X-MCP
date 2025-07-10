@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getDb } from '../db';
-import { convertAuroraDateTime } from '../utils/dateUtils';
+import { getDb } from '../../db';
+import { convertAuroraDateTime } from '../../utils/dateUtils';
 
 interface WealthStats {
   RaceName: string;

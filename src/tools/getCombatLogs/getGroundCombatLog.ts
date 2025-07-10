@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getDb } from '../db';
-import { convertAuroraDateTime } from '../utils/dateUtils';
+import { getDb } from '../../db';
+import { convertAuroraDateTime } from '../../utils/dateUtils';
 
 interface CombatLogEntry {
   Time: number;
@@ -11,10 +11,10 @@ interface CombatLogEntry {
   formattedTime?: string;
 }
 
-export const registerGetSpaceCombatLogTool = (server: McpServer) => {
+export const registerGetGroundCombatLogTool = (server: McpServer) => {
   server.tool(
-    'getSpaceCombatLog',
-    'Get space combat logs for a specific game and race',
+    'getGroundCombatLog',
+    'Get ground combat logs for a specific game and race',
     {
       gameId: z.number(),
       raceId: z.number(),
@@ -39,7 +39,7 @@ export const registerGetSpaceCombatLogTool = (server: McpServer) => {
           };
         }
 
-        // Get space combat logs
+        // Get ground combat logs
         const combatLogs = db
           .prepare(
             `SELECT 
@@ -56,25 +56,23 @@ export const registerGetSpaceCombatLogTool = (server: McpServer) => {
             AND FCT_GameLog.GameID = ?
             AND FCT_GameLog.RaceID = ?
             AND (
-                -- Regular space combat events
+                -- Ground combat events
                 (
                     FCT_GameLog.EventType IN (
                         SELECT EventTypeID 
                         FROM DIM_EventType 
                         WHERE EventTypeID != 99  -- Exclude commander health from this part
                         AND (
-                            EventTypeID BETWEEN 334 AND 335  -- Ship combat (Energy and Missile)
-                            OR EventTypeID IN (12, 14, 15, 16, 17, 18, 19, 20, 21, 22)  -- Targeting, missile launches, hits
-                            OR EventTypeID IN (219, 220, 221)  -- Boarding combat
-                            OR EventTypeID = 227  -- Ramming attempts
-                            OR EventTypeID = 297  -- Boarding underway
-                            OR EventTypeID IN (331, 332, 333)  -- Point defense
-                            OR EventTypeID IN (337, 338, 339, 340)  -- Ship attacks
-                            OR EventTypeID IN (342, 343, 344, 345)  -- Various damage types
+                            EventTypeID = 75  -- Ground Combat Update
+                            OR EventTypeID BETWEEN 300 AND 312  -- Ground combat summaries and reports
+                            OR EventTypeID = 314  -- Ground Combat Intelligence
+                            OR EventTypeID IN (352)  -- Bombardment Summary
+                            OR EventTypeID IN (305, 306, 307, 308, 309)  -- Ground Unit Combat reports
+                            OR EventTypeID IN (310, 311)  -- Ground support reassignments
                         )
                     )
                 )
-                -- Combat-related commander health events (ship-specific)
+                -- Combat-related commander health events (ground-specific)
                 OR (
                     FCT_GameLog.EventType = 99 
                     AND (
@@ -90,6 +88,7 @@ export const registerGetSpaceCombatLogTool = (server: McpServer) => {
                         MessageText LIKE '% medical %'
                         OR MessageText LIKE '% accident %'
                         OR MessageText LIKE '% retire %'
+                        OR MessageText LIKE '% SS-%'  -- Exclude ship-related deaths
                     )
                 )
             )
@@ -102,7 +101,7 @@ export const registerGetSpaceCombatLogTool = (server: McpServer) => {
             content: [
               {
                 type: 'text',
-                text: `No space combat logs found for RaceID ${raceId} in game ${gameId}`,
+                text: `No ground combat logs found for RaceID ${raceId} in game ${gameId}`,
               },
             ],
           };

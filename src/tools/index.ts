@@ -1,30 +1,20 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerQueryTool } from './query';
-import { registerSchemaTool } from './schema';
+import { registerSchemaTools } from './schema';
 import { registerGetCurrentDateTool } from './getCurrentDate';
-import { registerGetEmpireResourcesTool } from './getEmpireResources';
-import { registerGetEmpireMineralsTool } from './getEmpireMinerals';
 import { registerGetEmpireFleetTool } from './getEmpireFleet';
-import { registerGetEmpireWealthTool } from './getEmpireWealth';
-import { registerGetEmpireFuelTool } from './getEmpireFuel';
-import { registerGetSpaceCombatLogTool } from './getSpaceCombatLog';
-import { registerGetGroundCombatLogTool } from './getGroundCombatLog';
-import { registerGetFighterCombatLogTool } from './getFighterCombatLog';
 import { registerGetEmpirePopulationTool } from './getEmpirePopulation';
 import { registerSystemConnectionsTool } from './SystemConnectionsTool';
+import { registerGetCombatLogsTools } from './getCombatLogs';
+import { registerGetEmpireLogisticsTools } from './getEmpireLogistics';
 
 export const registerTools = (server: McpServer) => {
   registerQueryTool(server);
-  registerSchemaTool(server);
+  registerSchemaTools(server);
   registerGetCurrentDateTool(server);
-  registerGetEmpireResourcesTool(server);
-  registerGetEmpireMineralsTool(server);
   registerGetEmpireFleetTool(server);
-  registerGetEmpireWealthTool(server);
-  registerGetEmpireFuelTool(server);
   registerGetEmpirePopulationTool(server);
-  registerGetSpaceCombatLogTool(server);
-  registerGetGroundCombatLogTool(server);
-  registerGetFighterCombatLogTool(server);
+  registerGetCombatLogsTools(server);
+  registerGetEmpireLogisticsTools(server);
   registerSystemConnectionsTool(server);
 };

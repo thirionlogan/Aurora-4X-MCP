@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getDb } from '../db';
+import { getDb } from '../../db';
 
 interface Minerals {
   Duranium: number;
