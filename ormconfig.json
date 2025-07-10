@@ -1,0 +1,13 @@
+[
+  {
+    "name": "default",
+    "type": "better-sqlite3",
+    "host": "127.0.0.1",
+    "port": 0,
+    "username": "",
+    "password": "",
+    "database": "",
+    "synchronize": false,
+    "entities": ["src/entity/entities/*.js"]
+  }
+]

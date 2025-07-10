@@ -1,7 +1,9 @@
+import 'reflect-metadata';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import dotenv from 'dotenv';
 import { initDb } from './db';
+import { dataSource } from './dataSource/dataSource';
 import { registerTools } from './tools';
 import { registerResources } from './resources';
 import { registerPrompts } from './prompts';
@@ -17,6 +19,14 @@ try {
   logger.info('Database initialized successfully');
 } catch (error) {
   logger.error('Failed to initialize database', error);
+  process.exit(1);
+}
+
+try {
+  dataSource.initialize();
+  logger.info('Data source initialized successfully');
+} catch (error) {
+  logger.error('Failed to initialize data source', error);
   process.exit(1);
 }
 
